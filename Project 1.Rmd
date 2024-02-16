@@ -1,0 +1,101 @@
+---
+title: "DATA607 Project 1"
+author: "ZIXIAN LIANG"
+date: "2024-02-15"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r include=FALSE}
+library(tidyverse) 
+library(dplyr)
+library(stringr) 
+```
+
+Data Acquisition Input file :"tournamentinfo.txt”
+
+```{r}
+txturl <- "https://raw.githubusercontent.com/ZIXIANNOW/DATA607project1/main/tournamentinfo.txt"
+rawdata <- read_csv(txturl)
+rawdata
+
+```
+
+Then, split data into two data frames
+
+```{r}
+alldata <-read_lines(txturl)
+initial_data <- alldata[seq(5,length(alldata),3)]
+initial_data
+```
+
+```{r}
+additional_data <- alldata[seq(6,length(alldata),3)]
+additional_data
+```
+
+Then, extract required data from each data frame.
+
+```{r}
+Pair_number <- as.integer(str_extract(initial_data, "\\d+"))
+Pair_number
+```
+
+```{r}
+Player_name <- str_extract(initial_data, "\\|\\s*([^|]+)\\s*\\|")
+Player_name <- trimws(gsub("\\|", "", Player_name))
+Player_name
+```
+
+```{r}
+state <- str_extract(additional_data, "\\b[A-Z]{2}\\b")
+state
+```
+
+```{r}
+Total_pt <- str_extract(initial_data, "\\b\\d+\\.\\d+\\b")
+Total_pt
+```
+
+```{r}
+Pre_rating <- as.integer(str_extract(str_extract(additional_data, "[^\\d]\\d{3,4}[^\\d]"), "\\d+"))
+Pre_rating
+```
+
+```{r}
+Opponents <- unlist(str_extract_all(initial_data, "\\|[0-9].*"))
+Opponents <- str_replace_all(Opponents, "\\s{1,2}\\|","00|")
+Opponents <- str_extract_all(Opponents, "\\s\\d{1,2}")
+Opponents
+```
+
+Calculate average pre rating of opponents in order to prepare additional variable
+
+```{r}
+avgprechessoppoents <- c() 
+for (i in c(1:length(Opponents)))
+{
+  avgprechessoppoents[i] <- round(mean(Pre_rating[as.numeric(Opponents[[i]])]),0)
+}
+avgprechessoppoents
+```
+
+Concatenate all variables as new table 
+
+```{r}
+new_chess_rating <- data.frame(Pair_number,Player_name, state, Total_pt, Pre_rating, avgprechessoppoents)
+new_chess_rating
+```
+
+Export csv file
+
+```{r}
+write.csv(new_chess_rating, file ="Chess_Rating_List.csv")
+```
+
